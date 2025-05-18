@@ -1,8 +1,9 @@
-use std::sync::Arc;
 use common::{Config, Plant};
 use dotenvy::dotenv;
-use poise::serenity_prelude::{self as serenity, ChannelId, CreateActionRow, CreateEmbed, CreateMessage, EventHandler, Message, Ready};
-use surrealdb::{Surreal, engine::remote::ws::Ws, opt::auth::Root};
+use poise::serenity_prelude::{self as serenity, ChannelId, Color, ComponentInteractionDataKind, CreateActionRow, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption, EditInteractionResponse, EditMessage, EventHandler, Ready, Timestamp};
+use poise::CreateReply;
+use std::sync::Arc;
+use surrealdb::{engine::remote::ws::Ws, opt::auth::Root, Surreal};
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -45,18 +46,56 @@ async fn select(ctx: Context<'_>) -> Result<(), Error> {
     let config = data.config.clone();
     let db = data.con.clone();
     let plants: Vec<Plant> = db.select(&config.table).await?;
-    let mut an = String::from("```\ndate                voltage");
+    let mut an = vec![String::from("\ndate                voltage")];
+    let mut opts = vec![CreateSelectMenuOption::new("Page 1", "1")];
     for i in plants {
-        let parse = format!("\n{:} {:.2}V", i.date.format("%Y/%M/%D %H:%M:%S"), i.voltage);
-        if an.len() + parse.len() > 1500 {
-            an += "\n```";
-            break;
+        let parse = format!("\n{:} {:.2}V", i.date.format("%Y/%m/%d %H:%M:%S"), i.voltage);
+        if an.last().unwrap().len() + parse.len() > 3500 {
+            an.push(String::from(String::from("\ndate                voltage")));
+            opts.push(CreateSelectMenuOption::new(format!("Page {}", opts.len()+1), (opts.len()+1).to_string()));
         }
-        
-        an += &parse;
+
+        let index = an.len()-1;
+        an[index].push_str(&parse);
     }
-    ctx.say(format!("{:?}", an)).await?;
-    Ok(())
+
+    let rh = ctx.send(CreateReply::default()
+        .embed(CreateEmbed::new()
+                   .title(&config.table)
+                   .description(&an[0])
+                   .color(Color::BLUE)
+                   .footer(CreateEmbedFooter::new(format!("1 / {} page", an.len())))
+                   .timestamp(Timestamp::now()))
+        .components(vec![CreateActionRow::SelectMenu(CreateSelectMenu::new("menu", CreateSelectMenuKind::String {options: opts.clone()}))])
+    ).await.unwrap();
+
+    let m = rh.message().await.unwrap();
+
+    loop {
+        let mi = m.await_component_interaction(&ctx).await.unwrap();
+
+        let num = match &mi.data.kind {
+            ComponentInteractionDataKind::StringSelect { values } => {
+                values[0].parse::<i32>().unwrap()
+            }
+
+            _ => unreachable!()
+        };
+        
+        let response = CreateInteractionResponse::UpdateMessage(
+            CreateInteractionResponseMessage::new()
+                .embed(
+                    CreateEmbed::new()
+                        .title(&config.table)
+                        .description(&an[(num-1) as usize])
+                        .color(Color::BLUE)
+                        .footer(CreateEmbedFooter::new(format!("{} / {} page", num, an.len())))
+                        .timestamp(Timestamp::now())
+                ).components(vec![CreateActionRow::SelectMenu(CreateSelectMenu::new("menu", CreateSelectMenuKind::String {options: opts.clone()}))])
+        );
+        
+        mi.create_response(ctx, response).await.unwrap();
+    }
 }
 
 #[tokio::main]
@@ -112,9 +151,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn send_message_embed(ctx: &poise::serenity_prelude::Context, embed: CreateEmbed, action: Vec<CreateActionRow>) -> Message {
-    ChannelId::new(1373327401286897925).send_message(&ctx.http, CreateMessage::new()
-        .embed(embed)
-        .components(action)
-    ).await.unwrap()
-}
+// async fn send_message_embed(ctx: &Context<'_>, embed: CreateEmbed, action: Vec<CreateActionRow>) -> Message {
+//     send_message(ctx., CreateMessage::new()
+//         .embed(embed)
+//         .components(action)
+//     ).await.unwrap()
+// }
