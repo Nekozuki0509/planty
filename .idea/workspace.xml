@@ -18,8 +18,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8855066e-9ac5-46af-ad4c-06f3c07e7413" name="Changes" comment="Changes">
-      <change beforePath="$PROJECT_DIR$/.idea/planty.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/planty.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/crates/three/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/crates/three/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -43,12 +41,12 @@
     &quot;assignee&quot;: &quot;Nekozuki0509&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Nekozuki0509/planty.git&quot;,
-    &quot;accountId&quot;: &quot;dcb5b347-5fd4-4727-9f6e-5b4d44cb8cbf&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Nekozuki0509/planty.git",
+    "accountId": "08aa2745-d834-4e6a-a0d2-62e92d04a3ff"
   }
-}</component>
+}]]></component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="CtqKTJVg" />
   </component>
@@ -96,7 +94,7 @@
       <window_info anchor="bottom" id="Version Control" order="0" weight="0.314438" />
       <window_info anchor="bottom" id="Problems" order="1" />
       <window_info anchor="bottom" id="Problems View" order="2" weight="0.314438" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.40455428" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.2117248" />
       <window_info anchor="bottom" id="Services" order="4" weight="0.314438" />
       <window_info anchor="bottom" id="TODO" order="5" weight="0.314438" />
       <window_info anchor="bottom" id="Find" order="6" weight="0.32994187" />
@@ -129,8 +127,17 @@
       <workItem from="1747572830690" duration="90000" />
       <workItem from="1747572928923" duration="305000" />
       <workItem from="1747574349900" duration="32000" />
-      <workItem from="1747574503071" duration="9112000" />
+      <workItem from="1747574503071" duration="9442000" />
     </task>
+    <task id="LOCAL-00001" summary="Changes">
+      <option name="closed" value="true" />
+      <created>1747584163101</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1747584163101</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -45,7 +45,8 @@ async fn select(ctx: Context<'_>) -> Result<(), Error> {
     let data = ctx.data();
     let config = data.config.clone();
     let db = data.con.clone();
-    let plants: Vec<Plant> = db.select(&config.table).await?;
+    let mut plants: Vec<Plant> = db.select(&config.table).await?;
+    plants.sort_by(|x, x1| {x1.date.cmp(&x.date)});
     let mut an = vec![String::from("\ndate                voltage")];
     let mut opts = vec![CreateSelectMenuOption::new("Page 1", "1")];
     for i in plants {
