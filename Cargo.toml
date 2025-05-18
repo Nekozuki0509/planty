@@ -1,0 +1,22 @@
+[workspace.package]
+name = "planty"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+resolver = "2"
+members = ["crates/common", "crates/zero", "crates/three"]
+
+[workspace.dependencies]
+chrono = "0.4.41"
+serde = { version = "1.0.219", features = ["derive"] }
+
+surrealdb = "2.3.2"
+tokio = { version = "1.45.0", features = ["macros", "rt-multi-thread", "signal"] }
+dotenvy = "0.15.7"
+
+rppal = "0.22.1"
+
+poise = "0.6.1"
+
+common = { path = "crates/common" }

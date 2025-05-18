@@ -1,0 +1,17 @@
+[package]
+name = "three"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "three"
+path = "src/main.rs"
+
+[dependencies]
+chrono.workspace = true
+serde.workspace = true
+surrealdb.workspace = true
+tokio.workspace = true
+dotenvy.workspace = true
+poise.workspace = true
+common.workspace = true

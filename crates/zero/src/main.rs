@@ -1,27 +1,13 @@
+use common::{Config, Plant};
 use std::error::Error;
 use std::time::Duration;
-use chrono::{DateTime, Local};
+use chrono::Local;
 use dotenvy::dotenv;
 use rppal::gpio::Gpio;
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use surrealdb::{RecordId, Surreal, engine::remote::ws::Ws, opt::auth::Root};
 use tokio::{signal, sync::broadcast};
-
-#[derive(Debug)]
-struct Config {
-    host: String,
-    user: String,
-    password: String,
-    namespace: String,
-    database: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Plant {
-    voltage: f32,
-    date: DateTime<Local>
-}
 
 #[derive(Debug, Deserialize)]
 struct Record {
@@ -49,6 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         password: std::env::var("DB_PASSWORD").unwrap(),
         namespace: std::env::var("DB_NAMESPACE").unwrap(),
         database: std::env::var("DB_NAME").unwrap(),
+        table: std::env::var("TABLE_NAME").unwrap(),
     };
 
     dbg!(&config);
@@ -92,7 +79,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 println!("Voltage: {:.3} V", voltage);
 
                 let record: Option<Record> = db
-                .create(&config.database)
+                .create(&config.table)
                 .content(Plant {
                     voltage,
                     date: Local::now()

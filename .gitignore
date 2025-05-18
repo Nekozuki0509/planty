@@ -1,2 +1,3 @@
 /target
+/musl-cross-make
 .env
