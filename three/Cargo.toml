@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+poise = "0.6.1"
 surrealdb = "2.3.2"
 tokio = { version = "1.45.0", features = ["macros", "rt-multi-thread", "signal"] }
 serde = { version = "1.0.219", features = ["derive"] }
