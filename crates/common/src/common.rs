@@ -13,6 +13,6 @@ pub struct Config {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Plant {
-    pub voltage: f32,
+    pub voltage: f64,
     pub date: DateTime<Local>,
 }

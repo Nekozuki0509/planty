@@ -1,9 +1,15 @@
 use common::{Config, Plant};
 use dotenvy::dotenv;
-use poise::serenity_prelude::{self as serenity, ChannelId, Color, ComponentInteractionDataKind, CreateActionRow, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption, EditInteractionResponse, EditMessage, EventHandler, Ready, Timestamp};
+use poise::serenity_prelude::{self as serenity};
 use poise::CreateReply;
+use serenity::{ChannelId, Color, ComponentInteractionDataKind, CreateActionRow, CreateAttachment, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption, EventHandler, Ready, Timestamp};
 use std::sync::Arc;
+use chrono::{DateTime, Local};
+use plotters::backend::BitMapBackend;
+use plotters::chart::ChartBuilder;
+use plotters::prelude::{IntoDrawingArea, IntoFont, LineSeries, RED, WHITE};
 use surrealdb::{engine::remote::ws::Ws, opt::auth::Root, Surreal};
+use tokio::fs::File;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
@@ -35,6 +41,55 @@ async fn age(
     let u = user.as_ref().unwrap_or_else(|| ctx.author());
     let response = format!("{}'s account was created at {}", u.name, u.created_at());
     ctx.say(response).await?;
+    Ok(())
+}
+
+#[poise::command(slash_command, prefix_command)]
+async fn graph(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.defer().await?;
+
+    let data = ctx.data();
+    let config = data.config.clone();
+    let db = data.con.clone();
+    let mut plants: Vec<Plant> = db.select(&config.table).await?;
+    plants.sort_by(|x, x1| {x.date.cmp(&x1.date)});
+
+    {
+        let xs: Vec<DateTime<Local>> = plants.iter().map(|x| x.date).collect();
+        let ys: Vec<f64> = plants.iter().map(|x| x.voltage).collect::<Vec<f64>>();
+
+        let root = BitMapBackend::new("plot.png", (1080, 720)).into_drawing_area();
+        root.fill(&WHITE)?;
+
+        let (y_min, y_max) = ys.iter()
+            .fold(
+                (0.0 / 0.0, 0.0 / 0.0),
+                |(m, n), v| (v.min(m), v.max(n)),
+            );
+
+        let mut chart = ChartBuilder::on(&root)
+            .caption(&config.table, ("sans-serif", 20).into_font())
+            .margin(10)
+            .x_label_area_size(16)
+            .y_label_area_size(42)
+            .build_cartesian_2d(
+                *xs.first().unwrap()..*xs.last().unwrap(),
+                y_min..y_max,
+            )?;
+
+        chart.configure_mesh().x_label_formatter(&|x: &DateTime<Local>| x.format("%Y/%m/%d %H:%M").to_string()).draw()?;
+        let line_series = LineSeries::new(
+            xs.iter()
+                .zip(ys.iter())
+                .map(|(x, y)| (*x, *y)),
+            &RED,
+        );
+        chart.draw_series(line_series)?;
+        root.present()?;
+    }
+    
+    ctx.send(CreateReply::default().attachment(CreateAttachment::file(&File::open("plot.png").await?, format!("{}.png", &config.table)).await?)).await?;
+    
     Ok(())
 }
 
@@ -77,7 +132,7 @@ async fn select(ctx: Context<'_>) -> Result<(), Error> {
 
         let num = match &mi.data.kind {
             ComponentInteractionDataKind::StringSelect { values } => {
-                values[0].parse::<i32>().unwrap()
+                values[0].parse::<isize>().unwrap()
             }
 
             _ => unreachable!()
@@ -88,7 +143,7 @@ async fn select(ctx: Context<'_>) -> Result<(), Error> {
                 .embed(
                     CreateEmbed::new()
                         .title(&config.table)
-                        .description(&an[(num-1) as usize])
+                        .description(&an[(&num-1) as usize])
                         .color(Color::BLUE)
                         .footer(CreateEmbedFooter::new(format!("{} / {} page", num, an.len())))
                         .timestamp(Timestamp::now())
@@ -134,13 +189,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), select()],
+            commands: vec![age(), select(), graph()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {config: config, con: db.clone()})
+                Ok(Data {config, con: db.clone()})
             })
         })
         .build();
@@ -151,10 +206,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-// async fn send_message_embed(ctx: &Context<'_>, embed: CreateEmbed, action: Vec<CreateActionRow>) -> Message {
-//     send_message(ctx., CreateMessage::new()
-//         .embed(embed)
-//         .components(action)
-//     ).await.unwrap()
-// }

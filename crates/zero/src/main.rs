@@ -74,7 +74,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                 spi.transfer(&mut rx, &tx)?;
                 let result: u16 = (((rx[1] & 0x0F) as u16) << 8) | (rx[2] as u16);
-                let voltage = 3.3 * result as f32 / 4096.0;
+                let voltage = 3.3 * result as f64 / 4096.0;
 
                 println!("Voltage: {:.3} V", voltage);
 
